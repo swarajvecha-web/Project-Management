@@ -27,3 +27,9 @@ Thumbs.db
 # Editor
 .vscode/settings.json
 .idea/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
