@@ -1,0 +1,92 @@
+# ============================================================
+# k8s/backend/deployment.yaml
+# 2 replicas of the Express API with resource limits,
+# liveness/readiness probes, and graceful shutdown.
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jiraclone-backend
+  namespace: jiraclone
+  labels:
+    app: jiraclone-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jiraclone-backend
+  # Zero-downtime rolling update strategy
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1         # one extra pod during update
+      maxUnavailable: 0   # never take a pod down before new one is ready
+  template:
+    metadata:
+      labels:
+        app: jiraclone-backend
+      annotations:
+        # Prometheus auto-discovery: scrape /metrics on port 8000
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "8000"
+        prometheus.io/path:   "/metrics"
+    spec:
+      # Graceful shutdown: allow 30s for in-flight requests to complete
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: backend
+          image: 385105852446.dkr.ecr.us-east-1.amazonaws.com/jiraclone-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+
+          # Load non-sensitive config from ConfigMap
+          envFrom:
+            - configMapRef:
+                name: backend-config
+
+          # Load secrets individually to avoid exposing all keys
+          env:
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: MONGODB_URI
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: JWT_SECRET_KEY
+
+          # Resource limits prevent one pod from starving others
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          # Liveness probe: restart the pod if it stops responding
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 3
+
+          # Readiness probe: don't send traffic until the app is ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+
+      # Run as non-root to match the Dockerfile security posture
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000

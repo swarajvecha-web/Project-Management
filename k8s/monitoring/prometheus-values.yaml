@@ -1,0 +1,91 @@
+# ============================================================
+# k8s/monitoring/prometheus-values.yaml
+# Helm values for kube-prometheus-stack
+#
+# Install:
+#   helm repo add prometheus-community \
+#       https://prometheus-community.github.io/helm-charts
+#   helm repo update
+#   helm install monitoring prometheus-community/kube-prometheus-stack \
+#       --namespace monitoring --create-namespace \
+#       --values k8s/monitoring/prometheus-values.yaml
+# ============================================================
+
+# ── Prometheus ────────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    # Retain 15 days of data in-cluster (supplement with remote_write to Thanos/Mimir for long-term)
+    retention: 15d
+    retentionSize: "10GB"
+
+    # Auto-discover ServiceMonitors and PodMonitors in all namespaces
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+    # Persistent storage for Prometheus data (EBS on EKS)
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: gp2
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 20Gi
+
+# ── Grafana ───────────────────────────────────────────────────
+grafana:
+  enabled: true
+  adminPassword: "ChangeMe123!"    # ← change this or use a secret
+
+  # Expose Grafana via LoadBalancer (or use Ingress in production)
+  service:
+    type: LoadBalancer
+
+  # Pre-load dashboards from configmaps automatically
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  persistence:
+    enabled: true
+    storageClassName: gp2
+    size: 5Gi
+
+# ── Alertmanager ─────────────────────────────────────────────
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# ── Node Exporter ─────────────────────────────────────────────
+# Collects host-level metrics (CPU, disk, network) from each EC2 node
+nodeExporter:
+  enabled: true
+
+# ── kube-state-metrics ────────────────────────────────────────
+# Exposes Kubernetes object state (pod counts, deployment health, etc.)
+kubeStateMetrics:
+  enabled: true

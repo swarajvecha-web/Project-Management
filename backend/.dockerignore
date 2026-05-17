@@ -1,0 +1,38 @@
+# ============================================================
+# backend/.dockerignore
+# Prevents unnecessary files from being sent to the Docker
+# build context, keeping images small and builds fast.
+# ============================================================
+
+# Node dependencies (rebuilt inside the container)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (secrets must be injected at runtime)
+.env
+.env.*
+!.env.example
+
+# Development / editor artefacts
+.git
+.gitignore
+.DS_Store
+Thumbs.db
+*.log
+
+# Test files
+coverage
+**/*.test.js
+**/*.spec.js
+__tests__
+
+# Docker files (not needed inside the image)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+README.md
+*.md

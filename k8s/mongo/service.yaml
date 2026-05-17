@@ -1,0 +1,23 @@
+# ============================================================
+# k8s/mongo/service.yaml
+# Headless service gives MongoDB a stable DNS name:
+#   mongo-0.mongo-svc.jiraclone.svc.cluster.local
+# The backend uses:  MONGODB_URI=mongodb://mongo-svc:27017/jiraclone
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-svc
+  namespace: jiraclone
+  labels:
+    app: mongo
+spec:
+  # clusterIP: None → headless; lets StatefulSet pods get individual DNS records
+  clusterIP: None
+  selector:
+    app: mongo
+  ports:
+    - name: mongo
+      protocol: TCP
+      port: 27017
+      targetPort: 27017

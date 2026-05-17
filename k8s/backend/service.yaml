@@ -1,0 +1,21 @@
+# ============================================================
+# k8s/backend/service.yaml
+# ClusterIP exposes the backend only inside the cluster.
+# External traffic reaches it through the Ingress → ALB.
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: jiraclone-backend
+  namespace: jiraclone
+  labels:
+    app: jiraclone-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: jiraclone-backend
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8000
+      targetPort: 8000

@@ -1,0 +1,13 @@
+# ============================================================
+# k8s/backend/configmap.yaml
+# Non-sensitive environment variables for the backend pod.
+# Secrets (MONGODB_URI, JWT_SECRET_KEY) live in secret.yaml.
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: jiraclone
+data:
+  PORT: "8000"
+  NODE_ENV: "production"

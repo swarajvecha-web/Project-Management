@@ -1,0 +1,40 @@
+# ============================================================
+# k8s/ingress.yaml
+# AWS ALB Ingress – routes external traffic into the cluster:
+#   /api/*  → jiraclone-backend:8000
+#   /*      → jiraclone-frontend:80
+#
+# Requires: AWS Load Balancer Controller installed on EKS
+# Install:  https://kubernetes-sigs.github.io/aws-load-balancer-controller
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jiraclone-ingress
+  namespace: jiraclone
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+
+    # Routing: /api → backend, everything else → frontend
+    # The order matters: more specific paths must come first
+spec:
+  rules:
+    - http:
+        paths:
+          # API routes go to the backend service
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: jiraclone-backend
+                port:
+                  number: 8000
+          # All other routes go to the frontend (React SPA handles routing)
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: jiraclone-frontend
+                port:
+                  number: 80

@@ -1,0 +1,56 @@
+# ============================================================
+# k8s/frontend/deployment.yaml
+# 2 replicas of the nginx-served React SPA
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jiraclone-frontend
+  namespace: jiraclone
+  labels:
+    app: jiraclone-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jiraclone-frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: jiraclone-frontend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port:   "80"
+        prometheus.io/path:   "/metrics"   # nginx-prometheus-exporter sidecar (optional)
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: frontend
+          image: 385105852446.dkr.ecr.us-east-1.amazonaws.com/jiraclone-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10

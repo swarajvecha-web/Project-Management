@@ -1,0 +1,11 @@
+# ============================================================
+# k8s/namespace.yaml
+# Dedicated namespace isolates JiraClone from other workloads
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: jiraclone
+  labels:
+    app: jiraclone
+    environment: production
