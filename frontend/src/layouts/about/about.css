@@ -1,0 +1,112 @@
+.about-main-container {
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 80px);
+}
+
+.about-card {
+  background: white;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  margin-top: 20px;
+}
+
+.about-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 20px;
+  margin-bottom: 25px;
+}
+
+.about-header h2 {
+  color: #008774;
+  font-size: 24px;
+  margin: 0;
+}
+
+.edit-btn, .save-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.edit-btn {
+  background-color: #f0f7f6;
+  color: #008774;
+}
+
+.edit-btn:hover {
+  background-color: #008774;
+  color: white;
+}
+
+.save-btn {
+  background-color: #008774;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #006b5c;
+}
+
+.about-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.about-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.about-field label {
+  font-weight: 600;
+  color: #555;
+  font-size: 14px;
+}
+
+.about-field p {
+  color: #333;
+  margin: 0;
+  padding: 10px 15px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.about-input, .about-textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 15px;
+  color: #333;
+  transition: border-color 0.3s;
+}
+
+.about-input:focus, .about-textarea:focus {
+  outline: none;
+  border-color: #008774;
+}
+
+.about-textarea {
+  resize: vertical;
+}

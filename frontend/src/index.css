@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --foreground: #172B4D;
+    --sidebar: #F4F5F7;
+    --sidebar-foreground: #42526E;
+    --border: #DFE1E6;
+    --card: #FFFFFF;
+    --card-foreground: #172B4D;
+    --secondary: #EBECF0;
+    --secondary-foreground: #172B4D;
+    --muted-foreground: #5E6C84;
+  }
+
+  [data-theme='dark'] {
+    --background: #1D2125;
+    --foreground: #B6C2CF;
+    --sidebar: #161A1D;
+    --sidebar-foreground: #9FADBC;
+    --border: #2C333A;
+    --card: #22272B;
+    --card-foreground: #B6C2CF;
+    --secondary: #2C333A;
+    --secondary-foreground: #B6C2CF;
+    --muted-foreground: #8C9BAB;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow: hidden; /* Prevent the browser window itself from scrolling */
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-foreground);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Utility to completely hide scrollbars but keep scrolling functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* ── Spin animation for loading states ── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ── DataTable scrollable container scrollbar ── */
+.dt-wrapper > div::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.dt-wrapper > div::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dt-wrapper > div::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+.dt-wrapper > div::-webkit-scrollbar-thumb:hover {
+  background: var(--sidebar-foreground);
+}
