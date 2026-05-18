@@ -3,16 +3,16 @@
 // Declarative Pipeline for Jenkins
 //
 // Pre-requisites (configure in Jenkins → Manage Credentials):
-//   aws-credentials   → AWS Access Key ID + Secret (IAM user)
+//   aws-access-key-id     → Secret Text  (your AWS_ACCESS_KEY_ID)
+//   aws-secret-access-key → Secret Text  (your AWS_SECRET_ACCESS_KEY)
 //
 // Jenkins plugins required:
-//   Pipeline, Docker Pipeline, AWS Steps, Blue Ocean (optional)
+//   Pipeline, Docker Pipeline, Credentials Binding (built-in)
 // ============================================================
 
 pipeline {
 
     agent any
-
 
     // ── Pipeline-level environment variables ─────────────────────────
     environment {
@@ -21,13 +21,13 @@ pipeline {
         AWS_ACCOUNT_ID     = '385105852446'
         EKS_CLUSTER_NAME   = 'jiraclone-cluster'
         K8S_NAMESPACE      = 'jiraclone'
-        
+
         // ECR Repositories
         ECR_REGISTRY       = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         IMAGE_BACKEND      = "${ECR_REGISTRY}/jiraclone-backend"
         IMAGE_FRONTEND     = "${ECR_REGISTRY}/jiraclone-frontend"
 
-        // Image tag: use Git short SHA for traceability + BUILD_NUMBER
+        // Image tag: BUILD_NUMBER + git short SHA for traceability
         GIT_SHORT_SHA      = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         IMAGE_TAG          = "${BUILD_NUMBER}-${GIT_SHORT_SHA}"
     }
@@ -40,9 +40,9 @@ pipeline {
 
     // ── Options ──────────────────────────────────────────────────────
     options {
-        buildDiscarder(logRotator(numToKeepStr: '10'))  // keep last 10 builds
-        timeout(time: 30, unit: 'MINUTES')              // fail if stuck
-        disableConcurrentBuilds()                        // prevent race conditions
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
+        disableConcurrentBuilds()
         timestamps()
     }
 
@@ -56,17 +56,17 @@ pipeline {
             }
         }
 
-        // ── Stage 2: AWS Login ────────────────────────────────────────
+        // ── Stage 2: AWS ECR Login ────────────────────────────────────
+        // Uses two plain "Secret Text" credentials — no extra plugin needed
         stage('AWS Login') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-credentials',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id',     variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh """
-                        # Login to AWS ECR
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                         aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
                     """
                 }
@@ -92,7 +92,6 @@ pipeline {
                 stage('Build Frontend') {
                     steps {
                         dir('frontend') {
-                            // We use /api as the REACT_APP_API_URL so the Nginx Ingress routes it automatically
                             sh """
                                 docker build \
                                     --build-arg REACT_APP_API_URL=/ \
@@ -107,17 +106,16 @@ pipeline {
             }
         }
 
-
         // ── Stage 4: Push to AWS ECR ──────────────────────────────────
         stage('Push to ECR') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-credentials',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id',     variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh """
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
                         docker push ${IMAGE_BACKEND}:${IMAGE_TAG}
                         docker push ${IMAGE_BACKEND}:latest
                         docker push ${IMAGE_FRONTEND}:${IMAGE_TAG}
@@ -131,20 +129,20 @@ pipeline {
         // ── Stage 5: Deploy to EKS ────────────────────────────────────
         stage('Deploy to EKS') {
             when {
-                // Only deploy from main / master branch
                 anyOf {
                     branch 'main'
                     branch 'master'
                 }
             }
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-credentials',
-                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                ]]) {
+                withCredentials([
+                    string(credentialsId: 'aws-access-key-id',     variable: 'AWS_ACCESS_KEY_ID'),
+                    string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
+                ]) {
                     sh """
+                        export AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+                        export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+
                         # Authenticate kubectl with EKS
                         aws eks update-kubeconfig \
                             --region ${AWS_REGION} \
@@ -156,7 +154,7 @@ pipeline {
                         kubectl apply -f k8s/frontend/ -n ${K8S_NAMESPACE}
                         kubectl apply -f k8s/ingress.yaml -n ${K8S_NAMESPACE}
 
-                        # Rolling update: inject the exact new image tags
+                        # Rolling update with the exact new image tag
                         kubectl set image deployment/jiraclone-backend \
                             backend=${IMAGE_BACKEND}:${IMAGE_TAG} \
                             -n ${K8S_NAMESPACE}
@@ -165,7 +163,7 @@ pipeline {
                             frontend=${IMAGE_FRONTEND}:${IMAGE_TAG} \
                             -n ${K8S_NAMESPACE}
 
-                        # Wait for rollout to complete (fails build if pods crash)
+                        # Wait for rollout to complete
                         kubectl rollout status deployment/jiraclone-backend  -n ${K8S_NAMESPACE} --timeout=120s
                         kubectl rollout status deployment/jiraclone-frontend -n ${K8S_NAMESPACE} --timeout=120s
 
@@ -179,7 +177,6 @@ pipeline {
     // ── Post-build actions ────────────────────────────────────────────
     post {
         always {
-            // Clean up local Docker images to free disk space on the Jenkins agent
             sh """
                 docker rmi ${IMAGE_BACKEND}:${IMAGE_TAG}  || true
                 docker rmi ${IMAGE_FRONTEND}:${IMAGE_TAG} || true
@@ -188,10 +185,10 @@ pipeline {
             echo '🧹 Docker cleanup complete'
         }
         success {
-            echo "✅ Pipeline SUCCESS — \${env.JOB_NAME} #\${env.BUILD_NUMBER}"
+            echo "✅ Pipeline SUCCESS — ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
         failure {
-            echo "❌ Pipeline FAILED — \${env.JOB_NAME} #\${env.BUILD_NUMBER}"
+            echo "❌ Pipeline FAILED — ${env.JOB_NAME} #${env.BUILD_NUMBER}"
         }
     }
 }
