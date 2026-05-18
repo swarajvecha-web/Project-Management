@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
+import { useEffect } from 'react';
 import Register from './layouts/auth/Register.jsx';
 import Login from './layouts/auth/Login.jsx';
 import Dashboard from './layouts/dashboard/Dashboard.jsx';
@@ -18,12 +19,22 @@ import Roadmap from './layouts/roadmap/Roadmap.jsx';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+// Scroll to top on every route change
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} theme="colored" />
 
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path='/' element={<Login />} />
           <Route path='/register' element={<Register />} />
