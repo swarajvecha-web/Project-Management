@@ -30,6 +30,14 @@ spec:
                 name: jiraclone-backend
                 port:
                   number: 8000
+          # Grafana monitoring dashboard (proxied via grafana-proxy service)
+          - path: /grafana
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana-proxy
+                port:
+                  number: 3000
           # All other routes go to the frontend (React SPA handles routing)
           - path: /
             pathType: Prefix

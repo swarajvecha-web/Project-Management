@@ -1,0 +1,13 @@
+# ExternalName service — acts as a DNS alias from jiraclone namespace
+# to the real Grafana service in the monitoring namespace
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-proxy
+  namespace: jiraclone
+spec:
+  type: ExternalName
+  externalName: grafana.monitoring.svc.cluster.local
+  ports:
+    - port: 3000
+      targetPort: 3000
