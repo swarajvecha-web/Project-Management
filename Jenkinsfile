@@ -150,24 +150,20 @@ pipeline {
                             --region ${AWS_REGION} \
                             --name ${EKS_CLUSTER_NAME}
 
-                        # Apply all base manifests
+                        # Apply all base manifests (picks up any config changes)
                         kubectl apply -f k8s/mongo/ -n ${K8S_NAMESPACE}
                         kubectl apply -f k8s/backend/ -n ${K8S_NAMESPACE}
                         kubectl apply -f k8s/frontend/ -n ${K8S_NAMESPACE}
                         kubectl apply -f k8s/ingress.yaml -n ${K8S_NAMESPACE}
 
-                        # Rolling update with the exact new image tag
-                        kubectl set image deployment/jiraclone-backend \
-                            backend=${IMAGE_BACKEND}:${IMAGE_TAG} \
-                            -n ${K8S_NAMESPACE}
-
-                        kubectl set image deployment/jiraclone-frontend \
-                            frontend=${IMAGE_FRONTEND}:${IMAGE_TAG} \
-                            -n ${K8S_NAMESPACE}
+                        # Force a fresh pod restart so EKS pulls the new :latest image from ECR
+                        # (imagePullPolicy: Always is set in both deployments)
+                        kubectl rollout restart deployment/jiraclone-backend  -n ${K8S_NAMESPACE}
+                        kubectl rollout restart deployment/jiraclone-frontend -n ${K8S_NAMESPACE}
 
                         # Wait for rollout to complete
-                        kubectl rollout status deployment/jiraclone-backend  -n ${K8S_NAMESPACE} --timeout=120s
-                        kubectl rollout status deployment/jiraclone-frontend -n ${K8S_NAMESPACE} --timeout=120s
+                        kubectl rollout status deployment/jiraclone-backend  -n ${K8S_NAMESPACE} --timeout=180s
+                        kubectl rollout status deployment/jiraclone-frontend -n ${K8S_NAMESPACE} --timeout=180s
 
                         echo '✅ Deployment complete!'
                     """
