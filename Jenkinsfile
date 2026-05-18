@@ -81,6 +81,7 @@ pipeline {
                         dir('backend') {
                             sh """
                                 docker build \
+                                    --network=host \
                                     -t ${IMAGE_BACKEND}:${IMAGE_TAG} \
                                     -t ${IMAGE_BACKEND}:latest \
                                     .
@@ -94,6 +95,7 @@ pipeline {
                         dir('frontend') {
                             sh """
                                 docker build \
+                                    --network=host \
                                     --build-arg REACT_APP_API_URL=/ \
                                     -t ${IMAGE_FRONTEND}:${IMAGE_TAG} \
                                     -t ${IMAGE_FRONTEND}:latest \
