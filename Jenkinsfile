@@ -13,10 +13,6 @@ pipeline {
 
     agent any
 
-    // ── Tool versions (must match Jenkins Global Tool Configuration) ──
-    tools {
-        nodejs 'NodeJS-18'
-    }
 
     // ── Pipeline-level environment variables ─────────────────────────
     environment {
