@@ -50,11 +50,11 @@ function Register() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col md:flex-row-reverse">
+        <div className="min-h-screen bg-background flex flex-col md:flex-row-reverse overflow-y-auto">
             
             {/* Left side (Form, reversed visually so it's on right) */}
-            <div className="flex-1 flex flex-col justify-center items-center p-8 sm:px-12 lg:px-24">
-                <div className="w-full max-w-md space-y-8">
+            <div className="flex-1 flex flex-col justify-center items-center p-8 sm:px-12 lg:px-24 py-8">
+                <div className="w-full max-w-md space-y-4">
                     <div className="text-center">
                         <h2 className="mt-6 text-3xl font-extrabold text-foreground tracking-tight">
                             Create an account
