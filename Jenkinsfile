@@ -130,12 +130,6 @@ pipeline {
 
         // ── Stage 5: Deploy to EKS ────────────────────────────────────
         stage('Deploy to EKS') {
-            when {
-                anyOf {
-                    branch 'main'
-                    branch 'master'
-                }
-            }
             steps {
                 withCredentials([
                     string(credentialsId: 'aws-access-key-id',     variable: 'AWS_ACCESS_KEY_ID'),
