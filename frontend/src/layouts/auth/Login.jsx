@@ -21,7 +21,7 @@ function Login() {
         setErrorMsg('');
         setSuccessMsg('');
         try {
-            const response = await axios.post('api/login', formData);
+            const response = await axios.post('/api/login', formData);
             localStorage.setItem('tm_token', response.data.token);
             navigate('/admin/dashboard');
         } catch (error) {

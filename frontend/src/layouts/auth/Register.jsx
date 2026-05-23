@@ -33,7 +33,7 @@ function Register() {
         }
 
         try {
-            const response = await axios.post('api/register', formData);
+            const response = await axios.post('/api/register', formData);
             setFormData({
                 firstName: '',
                 lastName: '',
