@@ -25,7 +25,7 @@ terraform {
   #       --key-schema AttributeName=LockID,KeyType=HASH \
   #       --billing-mode PAY_PER_REQUEST
   backend "s3" {
-    bucket         = "jiraclone-tfstate-385105852446"
+    bucket         = "jiraclone-tfstate-022187637794"
     key            = "eks/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "jiraclone-tf-lock"

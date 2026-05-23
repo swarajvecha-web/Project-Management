@@ -31,7 +31,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: frontend
-          image: 385105852446.dkr.ecr.us-east-1.amazonaws.com/jiraclone-frontend:latest
+          image: 022187637794.dkr.ecr.us-east-1.amazonaws.com/jiraclone-frontend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 80
