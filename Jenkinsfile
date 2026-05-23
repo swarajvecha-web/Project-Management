@@ -18,7 +18,7 @@ pipeline {
     environment {
         // AWS / EKS settings
         AWS_REGION         = 'us-east-1'
-        AWS_ACCOUNT_ID     = '385105852446'
+        AWS_ACCOUNT_ID     = '022187637794'
         EKS_CLUSTER_NAME   = 'jiraclone-cluster'
         K8S_NAMESPACE      = 'jiraclone'
 
